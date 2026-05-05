@@ -18,71 +18,31 @@
             padding: 30px;
             border-radius: 10px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            max-width: 600px;
+            max-width: 700px;
             width: 100%;
         }
-        h1 {
-            text-align: center;
-            color: #5865F2; /* Couleur Discord */
-        }
-        .form-group {
-            margin-bottom: 15px;
-        }
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-        }
+        h1 { text-align: center; color: #5865F2; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
         input[type="text"], input[type="url"] {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #d1d5db;
-            border-radius: 5px;
-            box-sizing: border-box;
+            width: 100%; padding: 10px; border: 1px solid #d1d5db;
+            border-radius: 5px; box-sizing: border-box;
         }
-        .signature-section {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 30px;
-            gap: 20px;
-        }
-        .signer {
-            flex: 1;
-            background: #f9fafb;
-            padding: 15px;
-            border-radius: 8px;
-            border: 1px solid #e5e7eb;
-            text-align: center;
-        }
-        button {
-            background-color: #5865F2;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-weight: bold;
-            width: 100%;
-            margin-top: 10px;
-        }
-        button:hover {
-            background-color: #4752c4;
-        }
-        button:disabled {
-            background-color: #10b981;
-            cursor: not-allowed;
-        }
-        #final-contract {
-            display: none;
-            border: 2px solid #5865F2;
-            padding: 20px;
-            border-radius: 10px;
-            margin-top: 20px;
-            background-color: #f8faff;
-        }
-        .print-btn {
-            background-color: #374151;
-            margin-top: 20px;
+        .signature-section { display: flex; gap: 20px; margin-top: 20px; flex-wrap: wrap; }
+        .signer { flex: 1; min-width: 250px; background: #f9fafb; padding: 15px; border-radius: 8px; border: 1px solid #e5e7eb; text-align: center; }
+        canvas { border: 2px dashed #9ca3af; background-color: white; border-radius: 5px; cursor: crosshair; touch-action: none; width: 100%; height: 150px; }
+        .btn { background-color: #5865F2; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; width: 100%; margin-top: 10px; }
+        .btn:hover { background-color: #4752c4; }
+        .btn-clear { background-color: #ef4444; margin-top: 5px; }
+        .btn-clear:hover { background-color: #dc2626; }
+        #final-contract { display: none; border: 2px solid #5865F2; padding: 30px; border-radius: 10px; background-color: #f8faff; }
+        .final-signatures { display: flex; justify-content: space-around; margin-top: 30px; }
+        .final-sig-box { text-align: center; }
+        .final-sig-box img { max-width: 200px; border-bottom: 1px solid #000; }
+        @media print {
+            body { background: white; padding: 0; }
+            .container { box-shadow: none; max-width: 100%; }
+            .btn { display: none; }
         }
     </style>
 </head>
@@ -90,94 +50,151 @@
 
 <div class="container" id="setup-section">
     <h1>Contrat d'Accord Mutuel</h1>
-    <p style="text-align: center;">Remplissez les informations ci-dessous pour générer l'accord basé sur votre discussion Discord.</p>
+    <p style="text-align: center;">Remplissez les informations et signez ci-dessous.</p>
     
     <div class="form-group">
-        <label for="discord-id">ID du message Discord :</label>
+        <label>ID du message Discord :</label>
         <input type="text" id="discord-id" placeholder="Ex: 11029384756102938">
     </div>
     
     <div class="form-group">
-        <label for="discord-link">Lien du message Discord :</label>
+        <label>Lien du message Discord :</label>
         <input type="url" id="discord-link" placeholder="https://discord.com/channels/...">
     </div>
 
     <div class="signature-section">
         <div class="signer">
-            <label>Personne 1</label>
-            <input type="text" id="name1" placeholder="Ton prénom/pseudo">
-            <button id="btn-sign1" onclick="signContract(1)">Je signe</button>
+            <label>Prénom / Pseudo 1 :</label>
+            <input type="text" id="name1" placeholder="Personne 1" style="margin-bottom: 10px;">
+            <canvas id="pad1" width="300" height="150"></canvas>
+            <button class="btn btn-clear" onclick="clearPad('pad1')">Effacer la signature</button>
         </div>
         <div class="signer">
-            <label>Personne 2</label>
-            <input type="text" id="name2" placeholder="Son prénom/pseudo">
-            <button id="btn-sign2" onclick="signContract(2)">Je signe</button>
+            <label>Prénom / Pseudo 2 :</label>
+            <input type="text" id="name2" placeholder="Personne 2" style="margin-bottom: 10px;">
+            <canvas id="pad2" width="300" height="150"></canvas>
+            <button class="btn btn-clear" onclick="clearPad('pad2')">Effacer la signature</button>
         </div>
     </div>
+
+    <button class="btn" style="background-color: #10b981; margin-top: 30px; font-size: 1.2em;" onclick="generateContract()">✅ Valider et Générer le Contrat</button>
 </div>
 
 <div class="container" id="final-contract">
-    <h1>📜 Certificat d'Accord Validé</h1>
-    <p>Il est officiellement certifié que les deux parties ont trouvé un accord concernant leur différend.</p>
+    <h1 style="color: #10b981;">📜 Certificat d'Accord Validé</h1>
+    <p>Il est officiellement certifié que les deux parties ont trouvé un accord concernant leur différend. Ce document fait foi de leur engagement mutuel.</p>
     
-    <h3>Détails du contrat :</h3>
+    <h3>Détails de l'accord :</h3>
     <ul>
-        <li><strong>Accord de base :</strong> Message Discord</li>
+        <li><strong>Plateforme :</strong> Discord</li>
         <li><strong>ID du message :</strong> <span id="final-id"></span></li>
-        <li><strong>Lien vers le message :</strong> <a href="#" id="final-link" target="_blank">Cliquez ici pour voir la preuve</a></li>
+        <li><strong>Preuve :</strong> <a href="#" id="final-link" target="_blank">Lien vers le message original</a></li>
     </ul>
 
-    <h3>Signatures numériques :</h3>
-    <p>✅ <strong>Signé par :</strong> <span id="final-name1"></span></p>
-    <p>✅ <strong>Signé par :</strong> <span id="final-name2"></span></p>
+    <div class="final-signatures">
+        <div class="final-sig-box">
+            <p><strong>Signé par : <span id="final-name1"></span></strong></p>
+            <img id="final-img1" src="" alt="Signature 1">
+        </div>
+        <div class="final-sig-box">
+            <p><strong>Signé par : <span id="final-name2"></span></strong></p>
+            <img id="final-img2" src="" alt="Signature 2">
+        </div>
+    </div>
     
-    <p style="font-size: 0.8em; color: #6b7280; margin-top: 30px;">Ce document a été généré numériquement de manière consentie par les deux parties.</p>
-
-    <button class="print-btn" onclick="window.print()">🖨️ Sauvegarder en PDF / Imprimer</button>
+    <button class="btn" style="background-color: #374151; margin-top: 40px;" onclick="window.print()">🖨️ Sauvegarder en PDF</button>
 </div>
 
 <script>
-    let isSigned1 = false;
-    let isSigned2 = false;
+    // Configuration des zones de dessin (Canvas)
+    function setupCanvas(canvasId) {
+        const canvas = document.getElementById(canvasId);
+        const ctx = canvas.getContext('2d');
+        let isDrawing = false;
 
-    function signContract(personNum) {
-        const nameInput = document.getElementById('name' + personNum).value;
-        const linkInput = document.getElementById('discord-link').value;
-        const idInput = document.getElementById('discord-id').value;
-
-        if(!linkInput || !idInput) {
-            alert("Veuillez d'abord remplir le lien et l'ID du message Discord !");
-            return;
+        // Fonction pour ajuster les coordonnées selon la taille de l'écran
+        function getPos(e) {
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            let clientX = e.clientX || (e.touches && e.touches[0].clientX);
+            let clientY = e.clientY || (e.touches && e.touches[0].clientY);
+            return {
+                x: (clientX - rect.left) * scaleX,
+                y: (clientY - rect.top) * scaleY
+            };
         }
-        if(!nameInput) {
-            alert("Veuillez entrer un prénom ou pseudo avant de signer !");
-            return;
+
+        function start(e) { e.preventDefault(); isDrawing = true; draw(e); }
+        function stop(e) { e.preventDefault(); isDrawing = false; ctx.beginPath(); }
+        function draw(e) {
+            if (!isDrawing) return;
+            e.preventDefault();
+            const pos = getPos(e);
+            ctx.lineWidth = 3;
+            ctx.lineCap = 'round';
+            ctx.strokeStyle = '#000';
+            ctx.lineTo(pos.x, pos.y);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(pos.x, pos.y);
         }
 
-        // Marquer comme signé
-        const btn = document.getElementById('btn-sign' + personNum);
-        btn.innerText = "✓ Signé";
-        btn.disabled = true;
+        canvas.addEventListener('mousedown', start);
+        canvas.addEventListener('mousemove', draw);
+        canvas.addEventListener('mouseup', stop);
+        canvas.addEventListener('mouseout', stop);
 
-        if(personNum === 1) isSigned1 = true;
-        if(personNum === 2) isSigned2 = true;
-
-        // Si les deux ont signé, on génère le contrat final
-        if(isSigned1 && isSigned2) {
-            generateFinalContract();
-        }
+        canvas.addEventListener('touchstart', start, {passive: false});
+        canvas.addEventListener('touchmove', draw, {passive: false});
+        canvas.addEventListener('touchend', stop);
     }
 
-    function generateFinalContract() {
-        // Cacher le formulaire, montrer le contrat
+    setupCanvas('pad1');
+    setupCanvas('pad2');
+
+    function clearPad(canvasId) {
+        const canvas = document.getElementById(canvasId);
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+
+    function isCanvasBlank(canvasId) {
+        const canvas = document.getElementById(canvasId);
+        const blank = document.createElement('canvas');
+        blank.width = canvas.width;
+        blank.height = canvas.height;
+        return canvas.toDataURL() === blank.toDataURL();
+    }
+
+    function generateContract() {
+        const linkInput = document.getElementById('discord-link').value;
+        const idInput = document.getElementById('discord-id').value;
+        const name1 = document.getElementById('name1').value;
+        const name2 = document.getElementById('name2').value;
+
+        if(!linkInput || !idInput || !name1 || !name2) {
+            alert("Veuillez remplir tous les champs de texte.");
+            return;
+        }
+        if(isCanvasBlank('pad1') || isCanvasBlank('pad2')) {
+            alert("Les deux personnes doivent signer !");
+            return;
+        }
+
+        // Transférer les données au contrat final
+        document.getElementById('final-id').innerText = idInput;
+        document.getElementById('final-link').href = linkInput;
+        document.getElementById('final-name1').innerText = name1;
+        document.getElementById('final-name2').innerText = name2;
+
+        // Convertir les dessins en images
+        document.getElementById('final-img1').src = document.getElementById('pad1').toDataURL();
+        document.getElementById('final-img2').src = document.getElementById('pad2').toDataURL();
+
+        // Afficher le contrat final
         document.getElementById('setup-section').style.display = 'none';
         document.getElementById('final-contract').style.display = 'block';
-
-        // Remplir les infos
-        document.getElementById('final-id').innerText = document.getElementById('discord-id').value;
-        document.getElementById('final-link').href = document.getElementById('discord-link').value;
-        document.getElementById('final-name1').innerText = document.getElementById('name1').value;
-        document.getElementById('final-name2').innerText = document.getElementById('name2').value;
     }
 </script>
 
