@@ -1,1 +1,185 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contrat de Réconciliation</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f3f4f6;
+            color: #1f2937;
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+        }
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            max-width: 600px;
+            width: 100%;
+        }
+        h1 {
+            text-align: center;
+            color: #5865F2; /* Couleur Discord */
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="text"], input[type="url"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+        .signature-section {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 30px;
+            gap: 20px;
+        }
+        .signer {
+            flex: 1;
+            background: #f9fafb;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+            text-align: center;
+        }
+        button {
+            background-color: #5865F2;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            width: 100%;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #4752c4;
+        }
+        button:disabled {
+            background-color: #10b981;
+            cursor: not-allowed;
+        }
+        #final-contract {
+            display: none;
+            border: 2px solid #5865F2;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            background-color: #f8faff;
+        }
+        .print-btn {
+            background-color: #374151;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
 
+<div class="container" id="setup-section">
+    <h1>Contrat d'Accord Mutuel</h1>
+    <p style="text-align: center;">Remplissez les informations ci-dessous pour générer l'accord basé sur votre discussion Discord.</p>
+    
+    <div class="form-group">
+        <label for="discord-id">ID du message Discord :</label>
+        <input type="text" id="discord-id" placeholder="Ex: 11029384756102938">
+    </div>
+    
+    <div class="form-group">
+        <label for="discord-link">Lien du message Discord :</label>
+        <input type="url" id="discord-link" placeholder="https://discord.com/channels/...">
+    </div>
+
+    <div class="signature-section">
+        <div class="signer">
+            <label>Personne 1</label>
+            <input type="text" id="name1" placeholder="Ton prénom/pseudo">
+            <button id="btn-sign1" onclick="signContract(1)">Je signe</button>
+        </div>
+        <div class="signer">
+            <label>Personne 2</label>
+            <input type="text" id="name2" placeholder="Son prénom/pseudo">
+            <button id="btn-sign2" onclick="signContract(2)">Je signe</button>
+        </div>
+    </div>
+</div>
+
+<div class="container" id="final-contract">
+    <h1>📜 Certificat d'Accord Validé</h1>
+    <p>Il est officiellement certifié que les deux parties ont trouvé un accord concernant leur différend.</p>
+    
+    <h3>Détails du contrat :</h3>
+    <ul>
+        <li><strong>Accord de base :</strong> Message Discord</li>
+        <li><strong>ID du message :</strong> <span id="final-id"></span></li>
+        <li><strong>Lien vers le message :</strong> <a href="#" id="final-link" target="_blank">Cliquez ici pour voir la preuve</a></li>
+    </ul>
+
+    <h3>Signatures numériques :</h3>
+    <p>✅ <strong>Signé par :</strong> <span id="final-name1"></span></p>
+    <p>✅ <strong>Signé par :</strong> <span id="final-name2"></span></p>
+    
+    <p style="font-size: 0.8em; color: #6b7280; margin-top: 30px;">Ce document a été généré numériquement de manière consentie par les deux parties.</p>
+
+    <button class="print-btn" onclick="window.print()">🖨️ Sauvegarder en PDF / Imprimer</button>
+</div>
+
+<script>
+    let isSigned1 = false;
+    let isSigned2 = false;
+
+    function signContract(personNum) {
+        const nameInput = document.getElementById('name' + personNum).value;
+        const linkInput = document.getElementById('discord-link').value;
+        const idInput = document.getElementById('discord-id').value;
+
+        if(!linkInput || !idInput) {
+            alert("Veuillez d'abord remplir le lien et l'ID du message Discord !");
+            return;
+        }
+        if(!nameInput) {
+            alert("Veuillez entrer un prénom ou pseudo avant de signer !");
+            return;
+        }
+
+        // Marquer comme signé
+        const btn = document.getElementById('btn-sign' + personNum);
+        btn.innerText = "✓ Signé";
+        btn.disabled = true;
+
+        if(personNum === 1) isSigned1 = true;
+        if(personNum === 2) isSigned2 = true;
+
+        // Si les deux ont signé, on génère le contrat final
+        if(isSigned1 && isSigned2) {
+            generateFinalContract();
+        }
+    }
+
+    function generateFinalContract() {
+        // Cacher le formulaire, montrer le contrat
+        document.getElementById('setup-section').style.display = 'none';
+        document.getElementById('final-contract').style.display = 'block';
+
+        // Remplir les infos
+        document.getElementById('final-id').innerText = document.getElementById('discord-id').value;
+        document.getElementById('final-link').href = document.getElementById('discord-link').value;
+        document.getElementById('final-name1').innerText = document.getElementById('name1').value;
+        document.getElementById('final-name2').innerText = document.getElementById('name2').value;
+    }
+</script>
+
+</body>
+</html>
