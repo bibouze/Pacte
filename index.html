@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Contrat de Réconciliation</title>
+    <!-- Script pour générer le PDF directement -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -31,23 +33,19 @@
         .signature-section { display: flex; gap: 20px; margin-top: 20px; flex-wrap: wrap; }
         .signer { flex: 1; min-width: 250px; background: #f9fafb; padding: 15px; border-radius: 8px; border: 1px solid #e5e7eb; text-align: center; }
         canvas { border: 2px dashed #9ca3af; background-color: white; border-radius: 5px; cursor: crosshair; touch-action: none; width: 100%; height: 150px; }
-        .btn { background-color: #5865F2; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; width: 100%; margin-top: 10px; }
+        .btn { background-color: #5865F2; color: white; border: none; padding: 12px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; width: 100%; margin-top: 10px; font-size: 1em;}
         .btn:hover { background-color: #4752c4; }
-        .btn-clear { background-color: #ef4444; margin-top: 5px; }
+        .btn-clear { background-color: #ef4444; margin-top: 5px; font-size: 0.9em;}
         .btn-clear:hover { background-color: #dc2626; }
-        #final-contract { display: none; border: 2px solid #5865F2; padding: 30px; border-radius: 10px; background-color: #f8faff; }
+        #final-contract { display: none; border: 2px solid #5865F2; padding: 30px; border-radius: 10px; background-color: #ffffff; }
         .final-signatures { display: flex; justify-content: space-around; margin-top: 30px; }
         .final-sig-box { text-align: center; }
         .final-sig-box img { max-width: 200px; border-bottom: 1px solid #000; }
-        @media print {
-            body { background: white; padding: 0; }
-            .container { box-shadow: none; max-width: 100%; }
-            .btn { display: none; }
-        }
     </style>
 </head>
 <body>
 
+<!-- ÉTAPE 1 : FORMULAIRE ET SIGNATURES -->
 <div class="container" id="setup-section">
     <h1>Contrat d'Accord Mutuel</h1>
     <p style="text-align: center;">Remplissez les informations et signez ci-dessous.</p>
@@ -77,52 +75,54 @@
         </div>
     </div>
 
-    <button class="btn" style="background-color: #10b981; margin-top: 30px; font-size: 1.2em;" onclick="generateContract()">✅ Valider et Générer le Contrat</button>
+    <button class="btn" style="background-color: #10b981; margin-top: 30px; font-size: 1.2em;" onclick="generateContract()">✅ Valider et Créer le Contrat</button>
 </div>
 
-<div class="container" id="final-contract">
-    <h1 style="color: #10b981;">📜 Certificat d'Accord Validé</h1>
-    <p>Il est officiellement certifié que les deux parties ont trouvé un accord concernant leur différend. Ce document fait foi de leur engagement mutuel.</p>
-    
-    <h3>Détails de l'accord :</h3>
-    <ul>
-        <li><strong>Plateforme :</strong> Discord</li>
-        <li><strong>ID du message :</strong> <span id="final-id"></span></li>
-        <li><strong>Preuve :</strong> <a href="#" id="final-link" target="_blank">Lien vers le message original</a></li>
-    </ul>
+<!-- ÉTAPE 2 : LE CONTRAT FINAL (Généré en PDF) -->
+<div class="container" id="final-contract-wrapper" style="display: none;">
+    <div id="final-contract">
+        <h1 style="color: #10b981;">📜 Certificat d'Accord Validé</h1>
+        <p>Il est officiellement certifié que les deux parties ont trouvé un accord concernant leur différend. Ce document fait foi de leur engagement mutuel.</p>
+        
+        <h3>Détails de l'accord :</h3>
+        <ul>
+            <li><strong>Plateforme :</strong> Discord</li>
+            <li><strong>ID du message :</strong> <span id="final-id"></span></li>
+            <li><strong>Preuve :</strong> <a href="#" id="final-link" target="_blank">Lien vers le message original</a></li>
+        </ul>
 
-    <div class="final-signatures">
-        <div class="final-sig-box">
-            <p><strong>Signé par : <span id="final-name1"></span></strong></p>
-            <img id="final-img1" src="" alt="Signature 1">
+        <div class="final-signatures">
+            <div class="final-sig-box">
+                <p><strong>Signé par : <span id="final-name1"></span></strong></p>
+                <img id="final-img1" src="" alt="Signature 1">
+            </div>
+            <div class="final-sig-box">
+                <p><strong>Signé par : <span id="final-name2"></span></strong></p>
+                <img id="final-img2" src="" alt="Signature 2">
+            </div>
         </div>
-        <div class="final-sig-box">
-            <p><strong>Signé par : <span id="final-name2"></span></strong></p>
-            <img id="final-img2" src="" alt="Signature 2">
-        </div>
+        
+        <p style="font-size: 0.8em; color: #6b7280; margin-top: 50px; text-align: center;">Document généré numériquement avec le consentement des deux parties.</p>
     </div>
-    
-    <button class="btn" style="background-color: #374151; margin-top: 40px;" onclick="window.print()">🖨️ Sauvegarder en PDF</button>
+
+    <!-- Le bouton de téléchargement est en dehors de la zone PDF pour ne pas apparaître dessus -->
+    <button id="download-btn" class="btn" style="background-color: #ef4444; margin-top: 20px;" onclick="downloadPDF()">📥 Télécharger le Contrat (Fichier PDF)</button>
 </div>
 
 <script>
-    // Configuration des zones de dessin (Canvas)
+    // Configuration des zones de dessin
     function setupCanvas(canvasId) {
         const canvas = document.getElementById(canvasId);
         const ctx = canvas.getContext('2d');
         let isDrawing = false;
 
-        // Fonction pour ajuster les coordonnées selon la taille de l'écran
         function getPos(e) {
             const rect = canvas.getBoundingClientRect();
             const scaleX = canvas.width / rect.width;
             const scaleY = canvas.height / rect.height;
             let clientX = e.clientX || (e.touches && e.touches[0].clientX);
             let clientY = e.clientY || (e.touches && e.touches[0].clientY);
-            return {
-                x: (clientX - rect.left) * scaleX,
-                y: (clientY - rect.top) * scaleY
-            };
+            return { x: (clientX - rect.left) * scaleX, y: (clientY - rect.top) * scaleY };
         }
 
         function start(e) { e.preventDefault(); isDrawing = true; draw(e); }
@@ -182,19 +182,41 @@
             return;
         }
 
-        // Transférer les données au contrat final
         document.getElementById('final-id').innerText = idInput;
         document.getElementById('final-link').href = linkInput;
+        document.getElementById('final-link').innerText = linkInput;
         document.getElementById('final-name1').innerText = name1;
         document.getElementById('final-name2').innerText = name2;
 
-        // Convertir les dessins en images
         document.getElementById('final-img1').src = document.getElementById('pad1').toDataURL();
         document.getElementById('final-img2').src = document.getElementById('pad2').toDataURL();
 
-        // Afficher le contrat final
         document.getElementById('setup-section').style.display = 'none';
+        document.getElementById('final-contract-wrapper').style.display = 'block';
         document.getElementById('final-contract').style.display = 'block';
+    }
+
+    // Fonction de TÉLÉCHARGEMENT DIRECT
+    function downloadPDF() {
+        const element = document.getElementById('final-contract');
+        const btn = document.getElementById('download-btn');
+        
+        btn.innerText = "⏳ Génération du PDF en cours...";
+        btn.disabled = true;
+
+        const opt = {
+            margin:       10,
+            filename:     'Contrat_Discord.pdf',
+            image:        { type: 'jpeg', quality: 0.98 },
+            html2canvas:  { scale: 2 },
+            jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+
+        // Lance le téléchargement
+        html2pdf().set(opt).from(element).save().then(() => {
+            btn.innerText = "📥 Télécharger le Contrat (Fichier PDF)";
+            btn.disabled = false;
+        });
     }
 </script>
 
